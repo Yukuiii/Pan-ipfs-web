@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-    <div class="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-sm">
       <div class="flex items-center justify-center mb-8 space-x-4">
         <img 
           src="https://ae01.alicdn.com/kf/S8cf0304e2cf04c79a85ad4edca0f63a6m.png" 
@@ -46,7 +46,12 @@
         </div>
 
         <div class="flex items-center justify-between pt-2">
-          <a href="#" class="text-sm text-blue-600 hover:text-blue-700">创建账号</a>
+          <router-link 
+            to="/register" 
+            class="text-sm text-blue-600 hover:text-blue-700"
+          >
+            创建账号
+          </router-link>
           <button 
             type="submit" 
             class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"

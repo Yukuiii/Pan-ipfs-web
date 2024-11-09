@@ -92,9 +92,10 @@ const handleLogin = async () => {
     if (data.code === 200) {
       // 保存token和用户信息
       localStorage.setItem('token', data.data.token)
-      if (rememberMe.value) {
-        localStorage.setItem('userInfo', JSON.stringify(data.data.user))
-      }
+      localStorage.setItem('userInfo', JSON.stringify(data.data.user))
+      // if (rememberMe.value) {
+      //   localStorage.setItem('userInfo', JSON.stringify(data.data.user))
+      // }
       
       ElMessage.success('登录成功')
       // 跳转到首页

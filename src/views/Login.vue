@@ -66,11 +66,12 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { login } from '../api/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
 const rememberMe = ref(false)
 
@@ -90,16 +91,12 @@ const handleLogin = async () => {
     const { data } = await login(formData)
     
     if (data.code === 200) {
-      // 保存token和用户信息
       localStorage.setItem('token', data.data.token)
       localStorage.setItem('userInfo', JSON.stringify(data.data.user))
-      // if (rememberMe.value) {
-      //   localStorage.setItem('userInfo', JSON.stringify(data.data.user))
-      // }
       
       ElMessage.success('登录成功')
-      // 跳转到首页
-      router.push('/')
+      const redirect = route.query.redirect || '/'
+      router.push(redirect)
     } else {
       ElMessage.error(data.message || '登录失败')
     }

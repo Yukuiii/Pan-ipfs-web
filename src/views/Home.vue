@@ -43,7 +43,11 @@
       >
         <el-table-column prop="fileName" label="文件名" min-width="200" />
         <el-table-column prop="fileHash" label="Hash" min-width="400" />
-        <el-table-column prop="fileSize" label="大小" width="120" />
+        <el-table-column label="大小" width="120">
+          <template #default="scope">
+            {{ formatFileSize(scope.row.fileSize) }}
+          </template>
+        </el-table-column>
         <el-table-column label="上传时间" width="180">
           <template #default="scope">
             {{ formatDate(scope.row.createTime) }}
@@ -87,6 +91,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { deleteFile, getFileList, uploadFile } from '../api/file';
+import { formatFileSize } from '../utils/format';
 
 const router = useRouter()
 const loading = ref(false)

@@ -7,7 +7,7 @@
           alt="Logo" 
           class="w-16 h-16"
         >
-        <h1 class="text-2xl font-semibold text-gray-900">网盘登录系统</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">IPFS个人网盘系统</h1>
       </div>
       
       <form @submit.prevent="handleLogin" class="space-y-6">

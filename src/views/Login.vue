@@ -13,10 +13,10 @@
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
           <input 
-            type="email" 
-            v-model="email" 
+            type="text"
+            v-model="formData.username" 
             required
-            placeholder="电子邮件"
+            placeholder="用户名"
             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
           >
         </div>
@@ -24,64 +24,88 @@
         <div>
           <input 
             type="password"
-            v-model="password" 
+            v-model="formData.password" 
             required
             placeholder="密码"
-            autocomplete="new-password"
-            spellcheck="false"
-            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors [-webkit-text-security:disc] [text-security:disc]"
+            autocomplete="current-password"
+            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
           >
         </div>
 
         <div class="flex items-center justify-between">
-          <label class="flex items-center">
+          <div class="flex items-center">
             <input 
               type="checkbox" 
               v-model="rememberMe"
-              class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             >
-            <span class="ml-2 text-sm text-gray-600">记住我</span>
-          </label>
-          <a href="#" class="text-sm text-blue-600 hover:text-blue-700">忘记密码？</a>
+            <label class="ml-2 block text-sm text-gray-900">记住我</label>
+          </div>
+
+          <div class="text-sm">
+            <router-link 
+              to="/register" 
+              class="font-medium text-blue-600 hover:text-blue-500"
+            >
+              没有账号？立即注册
+            </router-link>
+          </div>
         </div>
 
-        <div class="flex items-center justify-between pt-2">
-          <router-link 
-            to="/register" 
-            class="text-sm text-blue-600 hover:text-blue-700"
-          >
-            创建账号
-          </router-link>
-          <button 
-            type="submit" 
-            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            登录
-          </button>
-        </div>
+        <button 
+          type="submit"
+          :disabled="loading"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+        >
+          {{ loading ? '登录中...' : '登录' }}
+        </button>
       </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { login } from '../api/auth'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
-const email = ref('')
-const password = ref('')
+const loading = ref(false)
 const rememberMe = ref(false)
 
+const formData = reactive({
+  username: '',
+  password: ''
+})
+
 const handleLogin = async () => {
+  if (!formData.username || !formData.password) {
+    ElMessage.warning('请输入用户名和密码')
+    return
+  }
+
   try {
-    console.log('登录信息：', {
-      email: email.value,
-      password: password.value,
-      rememberMe: rememberMe.value
-    })
+    loading.value = true
+    const { data } = await login(formData)
+    
+    if (data.code === 200) {
+      // 保存token和用户信息
+      localStorage.setItem('token', data.data.token)
+      if (rememberMe.value) {
+        localStorage.setItem('userInfo', JSON.stringify(data.data.user))
+      }
+      
+      ElMessage.success('登录成功')
+      // 跳转到首页
+      router.push('/')
+    } else {
+      ElMessage.error(data.message || '登录失败')
+    }
   } catch (error) {
-    console.error('登录失败：', error)
+    ElMessage.error(error.response?.data?.message || '登录失败，请稍后重试')
+  } finally {
+    loading.value = false
   }
 }
 </script> 

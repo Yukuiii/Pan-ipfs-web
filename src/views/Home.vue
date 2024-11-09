@@ -14,7 +14,7 @@
           </div>
           <div class="flex items-center">
             <span class="mr-4">{{ userInfo?.nickname || userInfo?.username }}</span>
-            <el-button type="danger" size="small" @click="handleLogout">退出登录</el-button>
+            <el-button type="danger" size="normal" @click="handleLogout">退出登录</el-button>
           </div>
         </div>
       </div>

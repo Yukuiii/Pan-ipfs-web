@@ -7,7 +7,7 @@
           alt="Logo" 
           class="w-16 h-16"
         >
-        <h1 class="text-2xl font-semibold text-gray-900">用户注册</h1>
+        <h1 class="text-2xl font-semibold text-gray-900">注册</h1>
       </div>
       
       <form @submit.prevent="handleRegister" class="space-y-6">

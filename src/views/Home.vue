@@ -161,6 +161,7 @@ const handleDelete = async (file) => {
 const handleLogout = () => {
   localStorage.removeItem('token')
   localStorage.removeItem('userInfo')
+  ElMessage.success('退出登录成功')
   router.push('/login')
 }
 

@@ -44,81 +44,111 @@
         <el-card class="announcement-card">
           <template #header>
             <div class="flex items-center">
-              <el-icon class="mr-2"><Bell /></el-icon>
-              <span class="text-lg font-bold">系统公告</span>
+              <el-icon class="mr-2 text-blue-500"><Bell /></el-icon>
+              <span class="text-lg font-bold text-gray-800">系统公告</span>
             </div>
           </template>
           
-          <el-collapse v-if="announcements.length > 0">
-            <el-collapse-item v-for="item in announcements" :key="item.id">
-              <template #title>
-                <div class="flex items-center">
-                  <span class="font-medium">{{ item.title }}</span>
-                  <span class="text-gray-400 text-sm ml-4">
-                    {{ formatDate(item.createTime) }}
-                  </span>
-                </div>
-              </template>
-              <div class="whitespace-pre-wrap">{{ item.content }}</div>
-            </el-collapse-item>
-          </el-collapse>
+          <div v-if="announcements.length > 0">
+            <el-timeline>
+              <el-timeline-item
+                v-for="item in announcements"
+                :key="item.id"
+                :timestamp="formatDate(item.createTime)"
+                placement="top"
+                type="primary"
+              >
+                <el-card class="announcement-item">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                    {{ item.title }}
+                  </h3>
+                  <div class="text-gray-600 whitespace-pre-wrap leading-relaxed">
+                    {{ item.content }}
+                  </div>
+                </el-card>
+              </el-timeline-item>
+            </el-timeline>
+          </div>
           
-          <el-empty v-else description="暂无公告" />
+          <el-empty 
+            v-else 
+            description="暂无公告" 
+            :image-size="100"
+          >
+            <template #description>
+              <p class="text-gray-400">暂时没有任何系统公告</p>
+            </template>
+          </el-empty>
         </el-card>
       </div>
 
-      <!-- 上传按钮 -->
-      <div class="mb-6">
-        <el-upload
-          class="upload-demo"
-          :http-request="customUpload"
-          :show-file-list="false"
-          :multiple="false"
-        >
-          <el-button type="primary">上传文件</el-button>
-        </el-upload>
-      </div>
+      <!-- 文件列表区域 -->
+      <el-card class="file-card">
+        <template #header>
+          <div class="flex justify-between items-center">
+            <div class="flex items-center">
+              <el-icon class="mr-2 text-blue-500"><Document /></el-icon>
+              <span class="text-lg font-bold text-gray-800">我的文件</span>
+            </div>
+            <!-- 上传按钮移到这里 -->
+            <el-upload
+              class="upload-demo"
+              :http-request="customUpload"
+              :show-file-list="false"
+              :multiple="false"
+            >
+              <el-button type="primary">上传文件</el-button>
+            </el-upload>
+          </div>
+        </template>
 
-      <!-- 文件列表 -->
-      <el-table
-        v-loading="loading"
-        :data="fileList"
-        style="width: 100%"
-        border
-      >
-        <el-table-column prop="fileName" label="文件名" min-width="200" />
-        <el-table-column prop="fileHash" label="Hash" min-width="400" />
-        <el-table-column label="大小" width="120">
-          <template #default="scope">
-            {{ formatFileSize(scope.row.fileSize) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="上传时间" width="180">
-          <template #default="scope">
-            {{ formatDate(scope.row.createTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
-          <template #default="scope">
-            <el-button 
-              type="primary" 
-              size="small" 
-              @click="handleDownload(scope.row)"
-              link
-            >
-              下载
-            </el-button>
-            <el-button 
-              type="danger" 
-              size="small" 
-              @click="handleDelete(scope.row)"
-              link
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+        <el-table
+          v-loading="loading"
+          :data="fileList"
+          style="width: 100%"
+          border
+        >
+          <el-table-column prop="fileName" label="文件名" min-width="200">
+            <template #default="{ row }">
+              <div class="flex items-center">
+                <el-icon class="mr-2"><Document /></el-icon>
+                <span>{{ row.fileName }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="fileHash" label="Hash" min-width="400" />
+          <el-table-column label="大小" width="120">
+            <template #default="scope">
+              {{ formatFileSize(scope.row.fileSize) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="上传时间" width="180">
+            <template #default="scope">
+              {{ formatDate(scope.row.createTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="scope">
+              <el-button 
+                type="primary" 
+                size="small" 
+                @click="handleDownload(scope.row)"
+                link
+              >
+                下载
+              </el-button>
+              <el-button 
+                type="danger" 
+                size="small" 
+                @click="handleDelete(scope.row)"
+                link
+              >
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
     </div>
   </div>
 </template>
@@ -133,17 +163,99 @@
 .announcement-card {
   background-color: #fff;
   border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
-.announcement-card :deep(.el-collapse-item__header) {
-  font-size: 16px;
-  color: #333;
+.announcement-card :deep(.el-card__header) {
+  padding: 15px 20px;
+  border-bottom: 1px solid #ebeef5;
+  background-color: #f8fafc;
 }
 
-.announcement-card :deep(.el-collapse-item__content) {
-  padding: 16px;
+.announcement-item {
+  margin-bottom: 0;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* 移除卡片的内边距 */
+.announcement-item :deep(.el-card__body) {
+  padding: 0;
+}
+
+/* 调整时间轴样式 */
+:deep(.el-timeline-item__node--primary) {
+  background-color: #409eff;
+}
+
+:deep(.el-timeline-item__timestamp) {
   color: #666;
+  font-size: 0.9em;
+  margin-bottom: 8px;
+}
+
+:deep(.el-timeline) {
+  padding: 16px;
+}
+
+:deep(.el-timeline-item__content) {
+  margin-left: 20px;
+}
+
+/* 调整公告内容样式 */
+.announcement-item h3 {
+  margin-bottom: 8px;
+  color: #303133;
+}
+
+.announcement-item .text-gray-600 {
+  color: #606266;
   line-height: 1.6;
+}
+
+/* 空状态样式优化 */
+:deep(.el-empty__description) {
+  margin-top: 10px;
+}
+
+:deep(.el-empty__image) {
+  opacity: 0.7;
+}
+
+.file-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+.file-card :deep(.el-card__header) {
+  padding: 15px 20px;
+  border-bottom: 1px solid #ebeef5;
+  background-color: #f8fafc;
+}
+
+/* 美化表格样式 */
+.file-card :deep(.el-table) {
+  --el-table-border-color: #ebeef5;
+  --el-table-header-bg-color: #f8fafc;
+}
+
+.file-card :deep(.el-table th) {
+  background-color: var(--el-table-header-bg-color);
+  font-weight: 600;
+  color: #606266;
+}
+
+.file-card :deep(.el-table--border) {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* 移除之前的上传按钮容器样式 */
+.mb-6 {
+  margin-bottom: 0;
 }
 </style>
 
@@ -153,7 +265,7 @@ import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { deleteFile, getFileList, uploadFile } from '../api/file';
 import { formatFileSize } from '../utils/format';
-import { Bell } from '@element-plus/icons-vue'
+import { Bell, Document } from '@element-plus/icons-vue'
 import { getAnnouncements } from '../api/admin'
 
 const router = useRouter()

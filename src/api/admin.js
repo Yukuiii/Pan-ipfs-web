@@ -37,4 +37,29 @@ export const getAllFiles = () => {
 // 删除文件
 export const deleteFile = (fileId) => {
   return api.delete(`/admin/files/${fileId}`)
+}
+
+// 获取公告列表
+export const getAnnouncements = () => {
+  return api.get('/admin/announcements')
+}
+
+// 添加公告
+export const addAnnouncement = (data) => {
+  return api.post('/admin/announcements', data)
+}
+
+// 更新公告
+export const updateAnnouncement = (id, data) => {
+  return api.put(`/admin/announcements/${id}`, data)
+}
+
+// 删除公告
+export const deleteAnnouncement = (id) => {
+  return api.delete(`/admin/announcements/${id}`)
+}
+
+// 添加用户
+export const addUser = (data) => {
+  return api.post('/admin/users', data)
 } 

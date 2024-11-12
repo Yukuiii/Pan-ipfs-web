@@ -22,7 +22,7 @@
             </div>
             <el-button 
               type="danger" 
-              size="small" 
+              size="normal" 
               @click="handleLogout"
               class="min-w-[80px]"
             >

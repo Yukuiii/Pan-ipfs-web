@@ -17,7 +17,7 @@
             <el-button 
               v-if="isAdmin"
               type="primary" 
-              size="small"
+              size="normal"
               @click="goToAdmin"
               class="mr-4"
             >
@@ -26,7 +26,7 @@
             <span>{{ userInfo?.nickname || userInfo?.username }}</span>
             <el-button 
               type="danger" 
-              size="small" 
+              size="normal" 
               @click="handleLogout"
               class="min-w-[80px]"
             >
@@ -39,6 +39,34 @@
 
     <!-- 主要内容区 -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- 公告展示区域 -->
+      <div class="mb-8">
+        <el-card class="announcement-card">
+          <template #header>
+            <div class="flex items-center">
+              <el-icon class="mr-2"><Bell /></el-icon>
+              <span class="text-lg font-bold">系统公告</span>
+            </div>
+          </template>
+          
+          <el-collapse v-if="announcements.length > 0">
+            <el-collapse-item v-for="item in announcements" :key="item.id">
+              <template #title>
+                <div class="flex items-center">
+                  <span class="font-medium">{{ item.title }}</span>
+                  <span class="text-gray-400 text-sm ml-4">
+                    {{ formatDate(item.createTime) }}
+                  </span>
+                </div>
+              </template>
+              <div class="whitespace-pre-wrap">{{ item.content }}</div>
+            </el-collapse-item>
+          </el-collapse>
+          
+          <el-empty v-else description="暂无公告" />
+        </el-card>
+      </div>
+
       <!-- 上传按钮 -->
       <div class="mb-6">
         <el-upload
@@ -101,6 +129,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.announcement-card {
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.announcement-card :deep(.el-collapse-item__header) {
+  font-size: 16px;
+  color: #333;
+}
+
+.announcement-card :deep(.el-collapse-item__content) {
+  padding: 16px;
+  color: #666;
+  line-height: 1.6;
+}
 </style>
 
 <script setup>
@@ -109,11 +153,14 @@ import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { deleteFile, getFileList, uploadFile } from '../api/file';
 import { formatFileSize } from '../utils/format';
+import { Bell } from '@element-plus/icons-vue'
+import { getAnnouncements } from '../api/admin'
 
 const router = useRouter()
 const loading = ref(false)
 const fileList = ref([])
 const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || '{}'))
+const announcements = ref([])
 
 // 判断是否为管理员
 const isAdmin = computed(() => userInfo.value?.role === 'ADMIN')
@@ -197,8 +244,25 @@ const formatDate = (dateStr) => {
   return date.toLocaleString()
 }
 
+// 获取公告列表
+const fetchAnnouncements = async () => {
+  try {
+    const { data } = await getAnnouncements()
+    if (data.code === 200) {
+      // 按创建时间倒序排序
+      announcements.value = data.data.sort((a, b) => 
+        new Date(b.createTime) - new Date(a.createTime)
+      )
+    }
+  } catch (error) {
+    console.error('获取公告列表失败:', error)
+    ElMessage.error('获取公告列表失败')
+  }
+}
+
 // 页面加载时获取文件列表
 onMounted(() => {
   fetchFileList()
+  fetchAnnouncements()
 })
 </script> 

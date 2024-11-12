@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-100">
     <!-- 顶部导航栏 -->
     <nav class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="w-full px-4">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
             <img 
@@ -10,11 +10,28 @@
               alt="Logo" 
               class="w-8 h-8 mr-2"
             >
-            <span class="text-lg font-semibold">IPFS个人网盘管理系统</span>
+            <span class="text-lg font-semibold">个人网盘</span>
           </div>
-          <div class="flex items-center">
-            <span class="mr-4">{{ userInfo?.nickname || userInfo?.username }}</span>
-            <el-button type="danger" size="normal" @click="handleLogout">退出登录</el-button>
+          <div class="flex items-center space-x-4">
+            <!-- 如果是管理员显示后台入口 -->
+            <el-button 
+              v-if="isAdmin"
+              type="primary" 
+              size="small"
+              @click="goToAdmin"
+              class="mr-4"
+            >
+              管理后台
+            </el-button>
+            <span>{{ userInfo?.nickname || userInfo?.username }}</span>
+            <el-button 
+              type="danger" 
+              size="small" 
+              @click="handleLogout"
+              class="min-w-[80px]"
+            >
+              退出登录
+            </el-button>
           </div>
         </div>
       </div>
@@ -88,7 +105,7 @@
 
 <script setup>
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { deleteFile, getFileList, uploadFile } from '../api/file';
 import { formatFileSize } from '../utils/format';
@@ -97,6 +114,14 @@ const router = useRouter()
 const loading = ref(false)
 const fileList = ref([])
 const userInfo = ref(JSON.parse(localStorage.getItem('userInfo') || '{}'))
+
+// 判断是否为管理员
+const isAdmin = computed(() => userInfo.value?.role === 'ADMIN')
+
+// 跳转到管理后台
+const goToAdmin = () => {
+  router.push('/admin/dashboard')
+}
 
 // 获取文件列表
 const fetchFileList = async () => {

@@ -11,11 +11,6 @@ const routes = [
     }
   },
   {
-    path: '/about',
-    name: 'About', 
-    component: () => import('../views/About.vue')
-  },
-  {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue')
@@ -24,6 +19,32 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: () => import('../views/Register.vue')
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('../views/admin/AdminLayout.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true // 需要管理员权限
+    },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('../views/admin/Dashboard.vue')
+      },
+      {
+        path: 'users',
+        name: 'UserManagement',
+        component: () => import('../views/admin/UserManagement.vue')
+      },
+      {
+        path: 'files',
+        name: 'FileManagement',
+        component: () => import('../views/admin/FileManagement.vue')
+      }
+    ]
   }
 ]
 
@@ -35,19 +56,23 @@ const router = createRouter({
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
   
-  if (to.meta.requiresAuth) { // 需要登录的路由
-    if (token) {
-      next() // 已登录，放行
-    } else {
+  if (to.meta.requiresAuth) {
+    if (!token) {
       ElMessage.warning('请先登录')
-      next({
-        path: '/login'
-      })
+      next({ path: '/login' })
+      return
     }
+    
+    if (to.meta.requiresAdmin && userInfo.role !== 'ADMIN') {
+      ElMessage.error('无权访问')
+      next({ path: '/' })
+      return
+    }
+    next()
   } else {
     if (token && (to.path === '/login' || to.path === '/register')) {
-      // 已登录状态下访问登录/注册页，重定向到首页
       next('/')
     } else {
       next()

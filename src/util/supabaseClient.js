@@ -1,3 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-export const supabase = createClient('https://lsttagrcllngedstoixb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxzdHRhZ3JjbGxuZ2Vkc3RvaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIxMTgwNjEsImV4cCI6MjA0NzY5NDA2MX0.rNtVPLZx1SMjeS577KdE1xEHZnbuXHsjaY542A2QIPc')
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)

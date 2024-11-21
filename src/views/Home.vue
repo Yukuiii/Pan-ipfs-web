@@ -112,19 +112,19 @@
             <template #default="{ row }">
               <div class="flex items-center">
                 <el-icon class="mr-2"><Document /></el-icon>
-                <span>{{ row.fileName }}</span>
+                <span>{{ row.file_name }}</span>
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="fileHash" label="Hash" min-width="400" />
+          <el-table-column prop="file_hash" label="Hash" min-width="400" />
           <el-table-column label="大小" width="120">
             <template #default="scope">
-              {{ formatFileSize(scope.row.fileSize) }}
+              {{ formatFileSize(scope.row.file_size) }}
             </template>
           </el-table-column>
           <el-table-column label="上传时间" width="180">
             <template #default="scope">
-              {{ formatDate(scope.row.createTime) }}
+              {{ formatDate(scope.row.create_time) }}
             </template>
           </el-table-column>
           <el-table-column label="操作" width="200" fixed="right">
@@ -286,10 +286,11 @@ const goToAdmin = () => {
 const fetchFileList = async () => {
   try {
     loading.value = true
-    const { data } = await getFileList()
-    if (data.code === 200) {
-      fileList.value = data.data
+    const response = await getFileList(userInfo.value.id)
+    if (response.code === 200) {
+      fileList.value = response.data
     }
+    console.log(fileList.value)
   } catch (error) {
     ElMessage.error('获取文件列表失败')
   } finally {
@@ -301,12 +302,12 @@ const fetchFileList = async () => {
 const customUpload = async ({ file }) => {
   try {
     loading.value = true
-    const { data } = await uploadFile(file)
-    if (data.code === 200) {
+    const response = await uploadFile(file, userInfo.value.id)
+    if (response.code === 200) {
       ElMessage.success('上传成功')
       fetchFileList() // 刷新文件列表
     } else {
-      ElMessage.error(data.message || '上传失败')
+      ElMessage.error(response.message || '上传失败')
     }
   } catch (error) {
     ElMessage.error('上传失败')
@@ -317,7 +318,7 @@ const customUpload = async ({ file }) => {
 
 // 处理下载
 const handleDownload = (file) => {
-  window.open(file.fileUrl)
+  window.open(file.file_url)
 }
 
 // 处理删除
@@ -327,12 +328,12 @@ const handleDelete = async (file) => {
       type: 'warning'
     })
     
-    const { data } = await deleteFile(file.id)
-    if (data.code === 200) {
+    const response = await deleteFile(file.id)
+    if (response.code === 200) {
       ElMessage.success('删除成功')
       fetchFileList() // 刷新文件列表
     } else {
-      ElMessage.error(data.message || '删除失败')
+      ElMessage.error(response.message || '删除失败')
     }
   } catch (error) {
     if (error !== 'cancel') {
@@ -343,7 +344,6 @@ const handleDelete = async (file) => {
 
 // 处理退出登录
 const handleLogout = () => {
-  localStorage.removeItem('token')
   localStorage.removeItem('userInfo')
   ElMessage.success('退出登录成功')
   router.push('/login')
@@ -375,6 +375,6 @@ const fetchAnnouncements = async () => {
 // 页面加载时获取文件列表
 onMounted(() => {
   fetchFileList()
-  fetchAnnouncements()
+  // fetchAnnouncements()
 })
 </script> 

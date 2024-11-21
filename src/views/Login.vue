@@ -17,6 +17,7 @@
             v-model="formData.username" 
             required
             placeholder="用户名"
+            autocomplete="username"
             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
           >
         </div>
@@ -27,7 +28,7 @@
             v-model="formData.password" 
             required
             placeholder="密码"
-            autocomplete="current-password"
+            autocomplete="password"
             class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
           >
         </div>
@@ -71,9 +72,15 @@ import { login } from '../api/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
-const route = useRoute()
 const loading = ref(false)
 const rememberMe = ref(false)
+const userInfo = ref({
+  username: '',
+  nickname: '',
+  email: '',
+  role: '',
+  create_time: ''
+})
 
 const formData = reactive({
   username: '',
@@ -88,17 +95,15 @@ const handleLogin = async () => {
 
   try {
     loading.value = true
-    const { data } = await login(formData)
+    const response = await login(formData)
     
-    if (data.code === 200) {
-      localStorage.setItem('token', data.data.token)
-      localStorage.setItem('userInfo', JSON.stringify(data.data.user))
-      
+    if (response.code === 200) {
+      userInfo.value = response.data
+      localStorage.setItem('userInfo', JSON.stringify(userInfo.value))
       ElMessage.success('登录成功')
-      const redirect = route.query.redirect || '/'
-      router.push(redirect)
+      router.push('/')
     } else {
-      ElMessage.error(data.message || '登录失败')
+      ElMessage.error(response.message || '登录失败')
     }
   } catch (error) {
     ElMessage.error(error.response?.data?.message || '登录失败，请稍后重试')

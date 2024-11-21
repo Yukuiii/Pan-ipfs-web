@@ -1,36 +1,79 @@
+import {
+  supabase
+} from '@/util/supabaseClient'
+import {
+  Response
+} from '@/common/response'
+
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
-  timeout: 5000
-})
-
-// 请求拦截器添加token
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers['Authorization'] = token
-  }
-  return config
-})
-
 // 获取文件列表
-export const getFileList = () => {
-  return api.get('/upload/files')
+export const getFileList = async (userId) => {
+  if (userId) {
+    const {
+      data,
+      error
+    } = await supabase.from('file').select('*').eq('user_id', userId)
+    if (error) {
+      throw error
+    }
+    return Response.success(data)
+  }
+  return Response.error('userId is required')
 }
 
 // 上传文件
-export const uploadFile = (file) => {
+export const uploadFile = async (file, userId) => {
   const formData = new FormData()
   formData.append('file', file)
-  return api.post('/upload', formData, {
+  const {
+    data
+  } = await axios.post('https://api.img2ipfs.org/api/v0/add', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   })
+  const fileData = {
+    file_name: data.Name,
+    file_hash: data.Hash,
+    file_size: data.Size,
+    file_url: `https://i0.img2ipfs.com/ipfs/${data.Hash}`
+  }
+
+
+  await uploadFileToSupabase(fileData, userId)
+  return Response.success(fileData)
+}
+
+const uploadFileToSupabase = async (fileData, userId) => {
+  try {
+    const {
+      data,
+      error
+    } = await supabase.from('file').insert({
+        user_id: userId,
+      file_name: fileData.file_name,
+      file_hash: fileData.file_hash,
+      file_size: fileData.file_size,
+      file_url: fileData.file_url,
+      create_time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+    })
+      .single()
+    if (error) {
+      throw error
+    }
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 // 删除文件
-export const deleteFile = (fileId) => {
-  return api.delete(`/upload/${fileId}`)
-} 
+export const deleteFile = async (fileId) => {
+  const {
+    error
+  } = await supabase.from('file').delete().eq('id', fileId)
+  if (error) {
+    throw error
+  }
+  return Response.success()
+}

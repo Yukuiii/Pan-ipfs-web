@@ -55,11 +55,10 @@ const router = createRouter({
 
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
-  const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+  const userInfo = JSON.parse(localStorage.getItem('userInfo') )
   
   if (to.meta.requiresAuth) {
-    if (!token) {
+    if (!userInfo) {
       ElMessage.warning('请先登录')
       next({ path: '/login' })
       return
@@ -72,7 +71,7 @@ router.beforeEach((to, from, next) => {
     }
     next()
   } else {
-    if (token && (to.path === '/login' || to.path === '/register')) {
+    if (userInfo && (to.path === '/login' || to.path === '/register')) {
       next('/')
     } else {
       next()

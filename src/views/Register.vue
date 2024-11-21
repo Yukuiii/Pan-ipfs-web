@@ -85,7 +85,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { register } from '../api/auth'
+import { register } from '@/api/auth'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -138,22 +138,22 @@ const handleRegister = async () => {
 
   try {
     loading.value = true
-    const { data } = await register({
+    const response = await register({
       username: formData.username,
       nickname: formData.nickname,
       email: formData.email,
       password: formData.password
     })
     
-    if (data.code === 200) {
+    if (response.code === 200) {
       ElMessage.success('注册成功')
-      // 注册成功后跳转到登录页
       router.push('/login')
     } else {
-      ElMessage.error(data.message || '注册失败')
+      ElMessage.error(response.message || '注册失败')
     }
   } catch (error) {
-    ElMessage.error(error.response?.data?.message || '注册失败，请稍后重试')
+    console.error('注册错误:', error)
+    ElMessage.error('注册失败，请稍后重试')
   } finally {
     loading.value = false
   }

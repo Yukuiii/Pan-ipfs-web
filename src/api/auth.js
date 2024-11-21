@@ -69,9 +69,9 @@ export const register = async (data) => {
         password: hashedPassword,
         nickname,
         email,
-        create_time: new Date().toISOString()
+        role: 'USER',
+        create_time: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
       })
-      .select()
       .single();
 
     if (error) {

@@ -5,8 +5,6 @@ import {
   Response
 } from '@/common/response'
 
-import axios from 'axios'
-
 // 获取文件列表
 export const getFileList = async (userId) => {
   if (userId) {

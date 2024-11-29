@@ -11,11 +11,15 @@
               alt="Logo" 
               class="w-8 h-8 mr-2"
             >
-            <span class="text-2xl font-semibold">管理后台</span>
+            <span class="text-2xl font-semibold">IPFS文件系统管理后台</span>
           </div>
           
           <!-- 右侧用户信息和退出按钮 -->
-          <div class="flex items-center space-x-8 pr-4">
+          <div class="flex items-center space-x-4 pr-4">
+            <el-button type="primary" link @click="router.push('/')">
+              <el-icon class="mr-1"><Back /></el-icon>
+              返回首页
+            </el-button>
             <div class="flex items-center">
               <el-icon class="mr-2"><User /></el-icon>
               <span>{{ userInfo?.nickname || userInfo?.username }}</span>
@@ -65,7 +69,7 @@
 </template>
 
 <script setup>
-import { DataLine, Document, User } from '@element-plus/icons-vue';
+import { DataLine, Document, User, Back } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';

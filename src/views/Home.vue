@@ -10,7 +10,7 @@
               alt="Logo" 
               class="w-8 h-8 mr-2"
             >
-            <span class="text-lg font-semibold">个人网盘</span>
+            <span class="text-lg font-semibold">IPFS个人文件系统</span>
           </div>
           <div class="flex items-center space-x-4">
             <!-- 如果是管理员显示后台入口 -->

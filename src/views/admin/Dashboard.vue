@@ -3,7 +3,7 @@
     <h2 class="text-2xl font-bold mb-6">控制台</h2>
     <el-row :gutter="20" class="mb-6">
       <el-col :span="8">
-        <el-card shadow="hover">
+        <el-card shadow="hover" v-loading="loading" element-loading-text="加载中...">
           <template #header>
             <div class="flex items-center">
               <el-icon class="mr-2"><User /></el-icon>
@@ -14,7 +14,7 @@
         </el-card>
       </el-col>
       <el-col :span="8">
-        <el-card shadow="hover">
+        <el-card shadow="hover" v-loading="loading" element-loading-text="加载中...">
           <template #header>
             <div class="flex items-center">
               <el-icon class="mr-2"><Document /></el-icon>
@@ -25,7 +25,7 @@
         </el-card>
       </el-col>
       <el-col :span="8">
-        <el-card shadow="hover">
+        <el-card shadow="hover" v-loading="loading" element-loading-text="加载中...">
           <template #header>
             <div class="flex items-center">
               <el-icon class="mr-2"><DataLine /></el-icon>
@@ -109,6 +109,8 @@ const statistics = ref({
   totalSize: 0
 })
 
+const loading = ref(false)
+
 const announcements = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
@@ -183,13 +185,20 @@ const handleSubmit = async () => {
 }
 
 const fetchStatistics = async () => {
+  loading.value = true
   try {
-    const { data } = await getStatistics()
-    if (data.code === 200) {
-      statistics.value = data.data
+    const result = await getStatistics()
+    if (result.code === 200) {
+      statistics.value = result.data
+    } else {
+      console.error('获取统计数据失败:', result.message)
+      ElMessage.error('获取统计数据失败')
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
+    ElMessage.error('获取统计数据失败')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -216,4 +225,4 @@ onMounted(() => {
 .announcement-card {
   margin-top: 20px;
 }
-</style> 
+</style>

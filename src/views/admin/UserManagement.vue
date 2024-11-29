@@ -5,7 +5,17 @@
       <el-button type="primary" @click="handleAdd">添加用户</el-button>
     </div>
 
-    <el-table :data="userList" border style="width: 100%">
+    <el-table 
+      :data="userList" 
+      border 
+      style="width: 100%"
+      v-loading="loading"
+      element-loading-text="加载中..."
+    >
+      <template #empty>
+        <el-empty v-if="!loading" description="暂无数据" />
+        <div v-else></div>
+      </template>
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="username" label="用户名" width="150" />
       <el-table-column prop="nickname" label="昵称" width="150" />
@@ -73,11 +83,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserList, deleteUser, addUser } from '../../api/admin'
+import { getAllUsers, addUser, deleteUser } from '../../api/admin'
 
 const userList = ref([])
 const dialogVisible = ref(false)
 const formRef = ref(null)
+const loading = ref(false)
 
 const userForm = ref({
   username: '',
@@ -110,13 +121,19 @@ const rules = {
 
 // 获取用户列表
 const fetchUserList = async () => {
+  loading.value = true
   try {
-    const { data } = await getUserList()
-    if (data.code === 200) {
-      userList.value = data.data
+    const result = await getAllUsers()
+    if (result.code === 200) {
+      userList.value = result.data
+    } else {
+      ElMessage.error(result.message || '获取用户列表失败')
     }
   } catch (error) {
+    console.error('获取用户列表失败:', error)
     ElMessage.error('获取用户列表失败')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -139,15 +156,16 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const { data } = await addUser(userForm.value)
-        if (data.code === 200) {
+        const result = await addUser(userForm.value)
+        if (result.code === 200) {
           ElMessage.success('添加用户成功')
           dialogVisible.value = false
           fetchUserList()
         } else {
-          ElMessage.error(data.message || '添加用户失败')
+          ElMessage.error(result.message || '添加用户失败')
         }
       } catch (error) {
+        console.error('添加用户失败:', error)
         ElMessage.error('添加用户失败')
       }
     }
@@ -166,12 +184,15 @@ const handleDelete = (row) => {
     }
   ).then(async () => {
     try {
-      const { data } = await deleteUser(row.id)
-      if (data.code === 200) {
+      const result = await deleteUser(row.id)
+      if (result.code === 200) {
         ElMessage.success('删除成功')
-        fetchUserList()
+        await fetchUserList()
+      } else {
+        ElMessage.error(result.message || '删除失败')
       }
     } catch (error) {
+      console.error('删除用户失败:', error)
       ElMessage.error('删除失败')
     }
   })

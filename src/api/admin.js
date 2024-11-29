@@ -1,65 +1,209 @@
-import axios from 'axios'
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
-  timeout: 5000
-})
-
-// 请求拦截器添加token
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers['Authorization'] = token
-  }
-  return config
-})
+import { supabase } from '@/util/supabaseClient'
+import { Response } from '@/common/response'
+import bcrypt from 'bcryptjs'
 
 // 获取统计数据
-export const getStatistics = () => {
-  return api.get('/admin/statistics')
+export const getStatistics = async () => {
+  try {
+    // 获取用户总数
+    const { count: userCount, error: userError } = await supabase
+      .from('user')
+      .select('*', { count: 'exact', head: true })
+
+    if (userError) return Response.error(userError.message)
+
+    // 获取文件总数和总大小
+    const { data: files, error: fileError } = await supabase
+      .from('file')
+      .select('file_size')
+
+    if (fileError) return Response.error(fileError.message)
+
+    const fileCount = files.length
+    const totalSize = files.reduce((sum, file) => sum + (parseInt(file.file_size) || 0), 0)
+
+    // 返回统计结果
+    return Response.success({
+      userCount,
+      fileCount,
+      totalSize
+    })
+  } catch (error) {
+    return Response.error(error.message)
+  }
 }
 
-// 获取用户列表
-export const getUserList = () => {
-  return api.get('/admin/users')
+// 获取所有用户
+export const getAllUsers = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('user')
+      .select('*')
+    
+    if (error) return Response.error(error.message)
+    return Response.success(data)
+  } catch (error) {
+    return Response.error(error.message)
+  }
 }
 
 // 删除用户
-export const deleteUser = (userId) => {
-  return api.delete(`/admin/users/${userId}`)
+export const deleteUser = async (userId) => {
+  if (!userId) return Response.error('userId is required')
+  
+  try {
+    const { error } = await supabase
+      .from('user')
+      .delete()
+      .eq('id', userId)
+    
+    if (error) return Response.error(error.message)
+    return Response.success(true)
+  } catch (error) {
+    return Response.error(error.message)
+  }
+}
+
+// 根据用户ID获取用户信息
+const getUserById = async (userId) => {
+  const { data, error } = await supabase
+    .from('user')
+    .select('id, username, nickname')
+    .eq('id', userId)
+    .single()
+  
+  if (error) {
+    console.error('获取用户信息失败:', error)
+    return null
+  }
+  return data
 }
 
 // 获取所有文件
-export const getAllFiles = () => {
-  return api.get('/admin/files')
+export const getAllFiles = async () => {
+  try {
+    const { data: files, error: filesError } = await supabase
+      .from('file')
+      .select('*')
+    
+    if (filesError) return Response.error(filesError.message)
+
+    // 为每个文件获取用户信息
+    const filesWithUsers = await Promise.all(
+      files.map(async (file) => {
+        const user = await getUserById(file.user_id)
+        return {
+          ...file,
+          users: user
+        }
+      })
+    )
+    
+    return Response.success(filesWithUsers)
+  } catch (error) {
+    console.error('获取文件列表失败:', error)
+    return Response.error(error.message)
+  }
 }
 
 // 删除文件
-export const deleteFile = (fileId) => {
-  return api.delete(`/admin/files/${fileId}`)
+export const deleteFile = async (fileId) => {
+  if (!fileId) return Response.error('fileId is required')
+
+  try {
+    const { error } = await supabase
+      .from('file')
+      .delete()
+      .eq('id', fileId)
+    
+    if (error) return Response.error(error.message)
+    return Response.success(true)
+  } catch (error) {
+    return Response.error(error.message)
+  }
 }
 
 // 获取公告列表
-export const getAnnouncements = () => {
-  return api.get('/admin/announcements')
+export const getAnnouncements = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('announcement')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) return Response.error(error.message)
+    return Response.success(data)
+  } catch (error) {
+    return Response.error(error.message)
+  }
 }
 
 // 添加公告
-export const addAnnouncement = (data) => {
-  return api.post('/admin/announcements', data)
+export const addAnnouncement = async (data) => {
+  if (!data) return Response.error('announcement data is required')
+  
+  try {
+    const { error } = await supabase
+      .from('announcement')
+      .insert([data])
+    
+    if (error) return Response.error(error.message)
+    return Response.success(true)
+  } catch (error) {
+    return Response.error(error.message)
+  }
 }
 
 // 更新公告
-export const updateAnnouncement = (id, data) => {
-  return api.put(`/admin/announcements/${id}`, data)
+export const updateAnnouncement = async (id, data) => {
+  if (!id) return Response.error('announcement id is required')
+  if (!data) return Response.error('announcement data is required')
+
+  try {
+    const { error } = await supabase
+      .from('announcement')
+      .update(data)
+      .eq('id', id)
+    
+    if (error) return Response.error(error.message)
+    return Response.success(true)
+  } catch (error) {
+    return Response.error(error.message)
+  }
 }
 
 // 删除公告
-export const deleteAnnouncement = (id) => {
-  return api.delete(`/admin/announcements/${id}`)
+export const deleteAnnouncement = async (id) => {
+  if (!id) return Response.error('announcement id is required')
+
+  try {
+    const { error } = await supabase
+      .from('announcement')
+      .delete()
+      .eq('id', id)
+    
+    if (error) return Response.error(error.message)
+    return Response.success(true)
+  } catch (error) {
+    return Response.error(error.message)
+  }
 }
 
 // 添加用户
-export const addUser = (data) => {
-  return api.post('/admin/users', data)
-} 
+export const addUser = async (data) => {
+  if (!data) return Response.error('user data is required')
+    
+    // 密码加密
+    data.password = await bcrypt.hash(data.password, 8)
+
+  try {
+    const { error } = await supabase
+      .from('user')
+      .insert(data)
+    
+    if (error) return Response.error(error.message)
+    return Response.success(true)
+  } catch (error) {
+    return Response.error(error.message)
+  }
+}

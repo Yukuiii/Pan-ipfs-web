@@ -207,3 +207,28 @@ export const addUser = async (data) => {
     return Response.error(error.message)
   }
 }
+
+// 更新用户
+export const updateUser = async (id, data) => {
+  if (!id || !data) return Response.error('user data is required')
+  
+  // 如果有新密码，进行加密
+  if (data.password) {
+    data.password = await bcrypt.hash(data.password, 8)
+  } else {
+    // 如果没有新密码，删除password字段，避免覆盖原密码
+    delete data.password
+  }
+
+  try {
+    const { error } = await supabase
+      .from('user')
+      .update(data)
+      .eq('id', id)
+    
+    if (error) return Response.error(error.message)
+    return Response.success(true)
+  } catch (error) {
+    return Response.error(error.message)
+  }
+}

@@ -36,16 +36,23 @@
       <el-table-column label="角色" width="100">
         <template #default="scope">
           <el-tag :type="scope.row.role === 'ADMIN' ? 'danger' : 'success'">
-            {{ scope.row.role==='ADMIN' ? '管理员' : '普通用户' }}
+            {{ scope.row.role === 'ADMIN' ? '管理员' : '普通用户' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" fixed="right" width="150">
+      <el-table-column label="操作" fixed="right" width="200">
         <template #default="scope">
+          <el-button 
+            type="primary" 
+            link
+            @click="handleEdit(scope.row)"
+          >
+            编辑
+          </el-button>
           <el-button 
             type="danger" 
             link
-            :disabled="scope.row.is_admin"
+            :disabled="scope.row.role === 'ADMIN'"
             @click="handleDelete(scope.row)"
           >
             删除
@@ -54,10 +61,10 @@
       </el-table-column>
     </el-table>
 
-    <!-- 添加用户对话框 -->
+    <!-- 用户表单对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="'添加用户'"
+      :title="isEdit ? '编辑用户' : '添加用户'"
       width="500px"
       @close="resetForm"
     >
@@ -69,21 +76,35 @@
         class="mt-4"
       >
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+          <el-input 
+            v-model="form.username" 
+            placeholder="请输入用户名"
+            :disabled="isEdit"
+          />
         </el-form-item>
         <el-form-item label="昵称" prop="nickname">
           <el-input v-model="form.nickname" placeholder="请输入昵称" />
         </el-form-item>
-        <el-form-item label="密码" prop="password">
+        <el-form-item 
+          label="密码" 
+          prop="password"
+          :rules="isEdit ? editPasswordRules : rules.password"
+        >
           <el-input
             v-model="form.password"
             type="password"
-            placeholder="请输入密码"
+            :placeholder="isEdit ? '不修改请留空' : '请输入密码'"
             show-password
           />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="form.role" placeholder="请选择角色">
+            <el-option label="普通用户" value="USER" />
+            <el-option label="管理员" value="ADMIN" />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -99,19 +120,20 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getAllUsers, addUser, deleteUser } from '../../api/admin'
+import { getAllUsers, addUser, updateUser, deleteUser } from '../../api/admin'
 
 const loading = ref(false)
 const userList = ref([])
 const dialogVisible = ref(false)
 const formRef = ref()
+const isEdit = ref(false)
 
 const form = ref({
   username: '',
   nickname: '',
   password: '',
   email: '',
-  is_admin: false
+  role: 'USER'
 })
 
 const rules = {
@@ -125,8 +147,16 @@ const rules = {
   ],
   email: [
     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ],
+  role: [
+    { required: true, message: '请选择角色', trigger: 'change' }
   ]
 }
+
+// 编辑时的密码校验规则
+const editPasswordRules = [
+  { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+]
 
 // 获取用户列表
 const fetchUserList = async () => {
@@ -149,7 +179,7 @@ const fetchUserList = async () => {
 
 // 删除用户
 const handleDelete = async (user) => {
-  if (user.is_admin) {
+  if (user.role === 'ADMIN') {
     ElMessage.warning('不能删除管理员用户')
     return
   }
@@ -182,6 +212,21 @@ const handleDelete = async (user) => {
 
 // 添加用户
 const handleAdd = () => {
+  isEdit.value = false
+  dialogVisible.value = true
+}
+
+// 编辑用户
+const handleEdit = (user) => {
+  isEdit.value = true
+  form.value = {
+    id: user.id,
+    username: user.username,
+    nickname: user.nickname || '',
+    password: '', // 编辑时密码为空
+    email: user.email || '',
+    role: user.role
+  }
   dialogVisible.value = true
 }
 
@@ -195,8 +240,9 @@ const resetForm = () => {
     nickname: '',
     password: '',
     email: '',
-    is_admin: false
+    role: 'USER'
   }
+  isEdit.value = false
 }
 
 // 提交表单
@@ -206,18 +252,25 @@ const submitForm = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const result = await addUser(form.value)
+        let result
+        if (isEdit.value) {
+          const { id, ...updateData } = form.value
+          result = await updateUser(id, updateData)
+        } else {
+          result = await addUser(form.value)
+        }
+
         if (result.code === 200) {
-          ElMessage.success('添加成功')
+          ElMessage.success(isEdit.value ? '更新成功' : '添加成功')
           dialogVisible.value = false
           await fetchUserList()
           resetForm()
         } else {
-          ElMessage.error(result.message || '添加失败')
+          ElMessage.error(result.message || (isEdit.value ? '更新失败' : '添加失败'))
         }
       } catch (error) {
-        console.error('添加用户失败:', error)
-        ElMessage.error('添加失败')
+        console.error(isEdit.value ? '更新用户失败:' : '添加用户失败:', error)
+        ElMessage.error(isEdit.value ? '更新失败' : '添加失败')
       }
     }
   })

@@ -1,15 +1,17 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex items-center justify-center px-4">
     <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-sm">
-      <div class="flex items-center justify-center mb-8 space-x-4">
-        <img 
-          src="https://ae01.alicdn.com/kf/S8cf0304e2cf04c79a85ad4edca0f63a6m.png" 
-          alt="Logo" 
-          class="w-16 h-16"
-        >
-        <h1 class="text-2xl font-semibold text-gray-900">IPFS个人网盘系统</h1>
+      <div class="flex flex-col items-center justify-center mb-8">
+        <div class="flex items-center space-x-4 mb-2">
+          <img 
+            src="https://ae01.alicdn.com/kf/S8cf0304e2cf04c79a85ad4edca0f63a6m.png" 
+            alt="Logo" 
+            class="w-16 h-16"
+          >
+          <h1 class="text-2xl font-semibold text-gray-900">IPFS个人文件系统</h1>
+        </div>
+        <div class="text-sm text-gray-500">永久的、去中心化、无审查的文件系统</div>
       </div>
-      
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
           <input 

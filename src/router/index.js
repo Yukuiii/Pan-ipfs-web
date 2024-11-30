@@ -43,6 +43,11 @@ const routes = [
         path: 'files',
         name: 'FileManagement',
         component: () => import('../views/admin/FileManagement.vue')
+      },
+      {
+        path: 'announcements',
+        name: 'AnnouncementManagement',
+        component: () => import('../views/admin/AnnouncementManagement.vue')
       }
     ]
   }

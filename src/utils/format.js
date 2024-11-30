@@ -17,3 +17,21 @@ export const formatFileSize = (bytes) => {
   
   return `${size.toFixed(2)} ${units[unitIndex]}`
 } 
+
+/**
+ * 格式化日期时间
+ * @param {string} dateStr 日期字符串
+ * @returns {string} 格式化后的日期时间
+ */
+export const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).replace(/\//g, '-')
+}

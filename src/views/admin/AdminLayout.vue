@@ -57,6 +57,10 @@
             <el-icon><Document /></el-icon>
             <span>文件管理</span>
           </el-menu-item>
+          <el-menu-item index="/admin/announcements">
+            <el-icon><Bell /></el-icon>
+            <span>公告管理</span>
+          </el-menu-item>
         </el-menu>
       </div>
 
@@ -69,7 +73,7 @@
 </template>
 
 <script setup>
-import { DataLine, Document, User, Back } from '@element-plus/icons-vue';
+import { DataLine, Document, User, Back, Bell } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';

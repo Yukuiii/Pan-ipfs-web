@@ -10,7 +10,7 @@
           >
           <h1 class="text-2xl font-semibold text-gray-900">IPFS个人文件系统</h1>
         </div>
-        <div class="text-sm text-gray-500">永久的、去中心化、无审查的文件系统</div>
+        <div class="text-sm text-gray-500">永久、去中心化、无审查的文件系统</div>
       </div>
       <form @submit.prevent="handleLogin" class="space-y-6">
         <div>
@@ -37,15 +37,9 @@
 
         <div class="flex items-center justify-between">
           <div class="flex items-center">
-            <input 
-              type="checkbox" 
-              v-model="rememberMe"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            >
-            <label class="ml-2 block text-sm text-gray-900">记住我</label>
           </div>
 
-          <div class="text-sm">
+          <div class="text-sm float-right">
             <router-link 
               to="/register" 
               class="font-medium text-blue-600 hover:text-blue-500"

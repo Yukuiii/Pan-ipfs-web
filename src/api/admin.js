@@ -1,10 +1,23 @@
 import { supabase } from '@/util/supabaseClient'
 import { Response } from '@/common/response'
+import { cache } from '@/util/cache'
 import bcrypt from 'bcryptjs'
+import { ca } from 'element-plus/es/locales.mjs'
 
 // 获取统计数据
-export const getStatistics = async () => {
+export const getStatistics = async (forceRefresh = false) => {
   try {
+    // 检查缓存
+    const cacheKey = 'admin_statistics';
+    const cachedData = cache.get(cacheKey);
+    if (!forceRefresh && cachedData) {
+      console.log('从缓存获取统计数据');
+      return Response.success(cachedData.data);
+    }
+
+    // 从数据库获取数据
+    console.log(forceRefresh ? '强制刷新统计数据' : '从数据库获取统计数据');
+    
     // 获取用户总数
     const { count: userCount, error: userError } = await supabase
       .from('user')
@@ -22,25 +35,43 @@ export const getStatistics = async () => {
     const fileCount = files.length
     const totalSize = files.reduce((sum, file) => sum + (parseInt(file.file_size) || 0), 0)
 
-    // 返回统计结果
-    return Response.success({
+    const statistics = {
       userCount,
       fileCount,
       totalSize
-    })
+    };
+
+    // 存入缓存
+    cache.set(cacheKey, statistics);
+
+    // 返回统计结果
+    return Response.success(statistics);
   } catch (error) {
     return Response.error(error.message)
   }
 }
 
 // 获取所有用户
-export const getAllUsers = async () => {
+export const getAllUsers = async (forceRefresh = false) => {
   try {
+    // 检查缓存
+    const cacheKey = 'admin_users';
+    const cachedData = cache.get(cacheKey);
+    if (!forceRefresh && cachedData) {
+      console.log('从缓存获取用户列表');
+      return Response.success(cachedData.data);
+    }
+
+    console.log(forceRefresh ? '强制刷新用户列表' : '从数据库获取用户列表');
     const { data, error } = await supabase
       .from('user')
       .select('*')
     
     if (error) return Response.error(error.message)
+
+    // 存入缓存
+    cache.set(cacheKey, data);
+    
     return Response.success(data)
   } catch (error) {
     return Response.error(error.message)
@@ -58,6 +89,10 @@ export const deleteUser = async (userId) => {
       .eq('id', userId)
     
     if (error) return Response.error(error.message)
+
+    // 清除缓存
+    cache.delete('admin_users');
+    
     return Response.success(true)
   } catch (error) {
     return Response.error(error.message)
@@ -80,28 +115,35 @@ const getUserById = async (userId) => {
 }
 
 // 获取所有文件
-export const getAllFiles = async () => {
+export const getAllFiles = async (forceRefresh = false) => {
   try {
-    const { data: files, error: filesError } = await supabase
+    // 检查缓存
+    const cacheKey = 'admin_files';
+    const cachedData = cache.get(cacheKey);
+    if (!forceRefresh && cachedData) {
+      console.log('从缓存获取文件列表');
+      return Response.success(cachedData.data);
+    }
+
+    console.log(forceRefresh ? '强制刷新文件列表' : '从数据库获取文件列表');
+    const { data, error } = await supabase
       .from('file')
       .select('*')
-    
-    if (filesError) return Response.error(filesError.message)
+
 
     // 为每个文件获取用户信息
-    const filesWithUsers = await Promise.all(
-      files.map(async (file) => {
-        const user = await getUserById(file.user_id)
-        return {
-          ...file,
-          users: user
-        }
-      })
-    )
+    const filesWithUser = await Promise.all(data.map(async (file) => {
+      const user = await getUserById(file.user_id)
+      return { ...file,user }
+    }))
+      
+    if (error) return Response.error(error.message)
+
+    // 存入缓存
+    cache.set(cacheKey, filesWithUser);
     
-    return Response.success(filesWithUsers)
+    return Response.success(filesWithUser)
   } catch (error) {
-    console.error('获取文件列表失败:', error)
     return Response.error(error.message)
   }
 }
@@ -117,6 +159,8 @@ export const deleteFile = async (fileId) => {
       .eq('id', fileId)
     
     if (error) return Response.error(error.message)
+    // 清除缓存
+    cache.delete('admin_files');
     return Response.success(true)
   } catch (error) {
     return Response.error(error.message)
@@ -124,14 +168,27 @@ export const deleteFile = async (fileId) => {
 }
 
 // 获取公告列表
-export const getAnnouncements = async () => {
+export const getAnnouncements = async (forceRefresh = false) => {
   try {
+    // 检查缓存
+    const cacheKey = 'admin_announcements';
+    const cachedData = cache.get(cacheKey);
+    if (!forceRefresh && cachedData) {
+      console.log('从缓存获取公告列表');
+      return Response.success(cachedData.data);
+    }
+
+    console.log(forceRefresh ? '强制刷新公告列表' : '从数据库获取公告列表');
     const { data, error } = await supabase
       .from('announcement')
       .select('*')
       .order('created_at', { ascending: false })
-    
+
     if (error) return Response.error(error.message)
+
+    // 存入缓存
+    cache.set(cacheKey, data);
+    
     return Response.success(data)
   } catch (error) {
     return Response.error(error.message)
@@ -202,6 +259,8 @@ export const addUser = async (data) => {
       .insert(data)
     
     if (error) return Response.error(error.message)
+    // 清除缓存
+    cache.delete('admin_users');
     return Response.success(true)
   } catch (error) {
     return Response.error(error.message)

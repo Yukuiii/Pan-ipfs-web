@@ -5,20 +5,43 @@ import {
   Response
 } from '@/common/response'
 import axios from 'axios'
+import { cache } from '@/util/cache'
 
 // 获取文件列表
-export const getFileList = async (userId) => {
-  if (userId) {
-    const {
-      data,
-      error
-    } = await supabase.from('file').select('*').eq('user_id', userId)
-    if (error) {
-      throw error
-    }
-    return Response.success(data)
+// @param {string} userId - 用户ID
+// @param {boolean} forceRefresh - 是否强制刷新缓存，默认false
+export const getFileList = async (userId, forceRefresh = false) => {
+  if (!userId) {
+    return Response.error('userId is required');
   }
-  return Response.error('userId is required')
+
+  // 生成缓存键名
+  const cacheKey = `files_${userId}`;
+  
+  // 检查缓存是否存在且未过期，且不是强制刷新
+  const cachedData = cache.get(cacheKey);
+  if (!forceRefresh && cachedData) {
+    console.log('从缓存获取文件列表');
+    return Response.success(cachedData.data);
+  }
+
+  // 如果缓存不存在、已过期或强制刷新，从数据库获取
+  console.log(forceRefresh ? '强制刷新文件列表' : '从数据库获取文件列表');
+  const { data, error } = await supabase.from('file').select('*').eq('user_id', userId);
+  if (error) {
+    throw error;
+  }
+
+  // 存入缓存
+  cache.set(cacheKey, data);
+
+  return Response.success(data);
+}
+
+// 清除指定用户的文件列表缓存
+const clearFileListCache = (userId) => {
+  const cacheKey = `files_${userId}`;
+  cache.delete(cacheKey);
 }
 
 // 上传文件
@@ -51,6 +74,8 @@ export const uploadFile = async (file, userId) => {
     // 保存到数据库
     try {
       await uploadFileToSupabase(fileData, userId)
+      // 清除缓存
+      clearFileListCache(userId);
       return Response.success(fileData)
     } catch (error) {
       console.error('数据库保存失败:', error)
@@ -100,6 +125,11 @@ export const deleteFile = async (fileId) => {
   } = await supabase.from('file').delete().eq('id', fileId)
   if (error) {
     throw error
+  }
+  // 清除缓存
+  const { data } = await supabase.from('file').select('user_id').eq('id', fileId);
+  if (data && data.length > 0) {
+    clearFileListCache(data[0].user_id);
   }
   return Response.success()
 }

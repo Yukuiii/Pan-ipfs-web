@@ -22,7 +22,7 @@
       </el-table-column>
       <el-table-column prop="user_nickname" label="上传用户" width="150">
         <template #default="scope">
-          {{ scope.row.users?.nickname || scope.row.users?.username || '-' }}
+          {{ scope.row.user?.nickname || scope.row.user?.username || '-' }}
         </template>
       </el-table-column>
       <el-table-column label="上传时间" width="180">
